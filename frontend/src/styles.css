@@ -1618,7 +1618,7 @@ table.preview .st.dup {
   }
 }
 
-/* ---------- 顶栏书签丝带 + 学习范围抽屉 ---------- */
+/* ---------- 顶栏抽屉拉手 + 学习范围抽屉 ---------- */
 .scope-wrap {
   position: absolute;
   top: 100%;
@@ -1626,41 +1626,64 @@ table.preview .st.dup {
   transform: translateX(-50%);
   z-index: 60;
 }
-.ribbon {
+/* 拉手：挂在顶栏底边的横向把手，带防滑纹 */
+.drawer-pull {
+  position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 27px;
-  border: none;
+  gap: 5px;
+  width: 128px;
+  height: 22px;
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-top: none;
+  border-radius: 0 0 11px 11px;
+  box-shadow: 0 2px 6px rgba(30, 50, 80, 0.1);
   cursor: pointer;
-  background: var(--red);
-  color: #fff;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 7px), 0 100%);
-  padding-top: 6px;
-  transition: height 0.18s ease;
-  filter: drop-shadow(0 3px 6px rgba(196, 56, 46, 0.35));
+  padding: 0;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s;
 }
-.ribbon:hover {
-  height: 33px;
+/* 扩大触控热区（平板友好） */
+.drawer-pull::after {
+  content: "";
+  position: absolute;
+  inset: -8px -24px;
 }
-.ribbon:focus-visible {
+.drawer-pull .ridge {
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  background: #c3ccd6;
+  transition: background 0.18s;
+}
+.drawer-pull:hover {
+  transform: translateY(2px);
+  border-color: var(--ink-3);
+  box-shadow: 0 4px 10px rgba(30, 50, 80, 0.14);
+}
+.drawer-pull:hover .ridge {
+  background: var(--ink-2);
+}
+.drawer-pull:active {
+  transform: translateY(3px);
+}
+.drawer-pull.open {
+  transform: translateY(2px);
+  border-color: var(--ink-3);
+}
+.drawer-pull.empty .ridge {
+  background: var(--amber);
+}
+.drawer-pull:focus-visible {
   outline: 2px solid #4c7dd0;
-  outline-offset: -4px;
+  outline-offset: -3px;
 }
-.ribbon.empty {
-  background: #9aa7b4;
-  filter: drop-shadow(0 3px 6px rgba(100, 115, 130, 0.3));
-}
-.ribbon svg {
-  width: 14px;
-  height: 14px;
-}
+/* 抽屉面板：从拉手下方滑出，带回弹 */
 .scope-drawer {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%);
   width: min(760px, calc(100vw - 40px));
   background: var(--card);
   border: 1px solid var(--hair);
@@ -1670,14 +1693,16 @@ table.preview .st.dup {
   padding: 16px 20px 18px;
   max-height: calc(100vh - 150px);
   overflow-y: auto;
-  animation: drawerDown 0.22s ease;
   text-align: left;
+  transform: translateX(-50%) translateY(-14px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.12), opacity 0.2s ease;
 }
-@keyframes drawerDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
+.scope-drawer.open {
+  transform: translateX(-50%);
+  opacity: 1;
+  pointer-events: auto;
 }
 .scope-head {
   display: flex;

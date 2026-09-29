@@ -154,28 +154,25 @@ export default function ScopeRibbon() {
     <div className="scope-wrap" ref={wrapRef}>
       <button
         type="button"
-        className={"ribbon" + (activeCount === 0 ? " empty" : "")}
+        className={"drawer-pull" + (open ? " open" : "") + (activeCount === 0 ? " empty" : "")}
         onClick={() => setOpen((o) => !o)}
-        title={activeCount === 0 ? "设置学习范围（当前没有选中任何单元）" : "学习范围"}
+        title={activeCount === 0 ? "拉开抽屉，设置学习范围（当前没有选中任何单元）" : open ? "推回抽屉" : "拉开抽屉，设置学习范围"}
         aria-expanded={open}
         aria-label="学习范围"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5a2.5 2.5 0 0 0-2.5 2.5z" />
-          <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
-          <path d="M9 8.5h6" />
-        </svg>
+        <i className="ridge" />
+        <i className="ridge" />
+        <i className="ridge" />
       </button>
 
-      {open && (
-        <div className="scope-drawer">
-          <div className="scope-head">
-            <b>学习范围</b>
-            <span className="scope-note">勾选课本整本加入；拖动滑块两端选出一段单元（如 Unit 2–5），选中的单元同时用于学习和练习</span>
-            <button type="button" className="mini-btn" onClick={() => setOpen(false)}>
-              收起 ▴
-            </button>
-          </div>
+      <div className={"scope-drawer" + (open ? " open" : "")} role="dialog" aria-label="学习范围">
+        <div className="scope-head">
+          <b>学习范围</b>
+          <span className="scope-note">勾选课本整本加入；拖动滑块两端选出一段单元（如 Unit 2–5），选中的单元同时用于学习和练习</span>
+          <button type="button" className="mini-btn" onClick={() => setOpen(false)}>
+            推回 ▴
+          </button>
+        </div>
           <div className="scope-books">
             {(books ?? []).map((b) => {
               const all = b.units.length > 0 && b.units.every((u) => u.study && u.practice);
@@ -221,8 +218,7 @@ export default function ScopeRibbon() {
               </div>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
