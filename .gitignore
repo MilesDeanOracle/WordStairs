@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 数据库与日志（本地数据不入库）
+backend/app.db
+*.log
+
+# Node
+node_modules/
+frontend/dist/
+
+# 环境与编辑器
+.env
+.idea/
+.vscode/
+.DS_Store
