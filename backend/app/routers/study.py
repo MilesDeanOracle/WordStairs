@@ -1,5 +1,5 @@
 import random
-from datetime import date
+from datetime import date, datetime, time, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,7 +8,7 @@ from ..auth import get_current_user
 from ..config import DAILY_GOAL, NEW_PER_DAY, REVIEW_PER_DAY
 from ..database import get_db
 from ..models import BookWord, ReviewLog, Unit, UnitScope, User, UserWord, Word
-from ..points import check_task, get_or_today_stat, task_states, touch_streak
+from ..points import get_or_today_stat, task_states, touch_streak
 from ..schemas import GradeIn
 from ..serialize import me_dict, word_dict
 from ..sm2 import apply_grade
@@ -72,8 +72,45 @@ def today(user: User = Depends(get_current_user), db: Session = Depends(get_db))
 
     db.commit()
     me = me_dict(user, db)
+
+    # 今天过过的全部词（含已出列的）：队列是滚动窗口，前端「重新学习」
+    # 需要靠这份快照把今天学过的词从第一张再排一遍。
+    # ReviewLog.created_at 是 naive UTC，这里的起点是「本地今天零点」换算成的 UTC。
+    day_start_utc = (
+        datetime.combine(date.today(), time.min)
+        .astimezone()
+        .astimezone(timezone.utc)
+        .replace(tzinfo=None)
+    )
+    day_items: list[dict] = []
+    seen_day: set[int] = set()
+    day_logs = (
+        db.query(ReviewLog)
+        .filter(
+            ReviewLog.user_id == user.id,
+            ReviewLog.mode == "card",
+            ReviewLog.created_at >= day_start_utc,
+        )
+        .order_by(ReviewLog.id)
+        .all()
+    )
+    for log in day_logs:
+        if log.word_id in seen_day:
+            continue
+        seen_day.add(log.word_id)
+        w = db.get(Word, log.word_id)
+        if not w:
+            continue
+        uw = (
+            db.query(UserWord)
+            .filter(UserWord.user_id == user.id, UserWord.word_id == w.id)
+            .first()
+        )
+        day_items.append({"user_word_id": uw.id if uw else None, "word": word_dict(w), "is_new": False})
+
     return {
         "items": items,
+        "day_items": day_items,
         "tasks": task_states(stat),
         "stats": {
             "learned_today": me["learned_today"],
@@ -107,20 +144,19 @@ def grade(body: GradeIn, user: User = Depends(get_current_user), db: Session = D
     apply_grade(uw, body.level)
 
     stat = get_or_today_stat(db, user)
-    stat.words_reviewed += 1
+    stat.words_reviewed += 1  # 仅用于「今日已学 x/goal」展示，不参与任何加分
     touch_streak(db, user)
     db.add(ReviewLog(user_id=user.id, word_id=word.id, mode="card", correct=body.level == "yes"))
 
-    # 过卡本身不加分，积分来自练习和任务
-    task_gain = check_task(db, user, stat, "words")
+    # 今日学习（过卡/复习）一律不加分，积分只在专项练习答对时发放
     db.commit()
 
     return {
         "ok": True,
         "due_at": uw.due_at.isoformat(),
         "interval_days": uw.interval_days,
-        "points_added": task_gain,
-        "task_awarded": task_gain > 0,
+        "points_added": 0,
+        "task_awarded": False,
         "total_points": user.points,
         "user": me_dict(user, db),
     }

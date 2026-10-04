@@ -42,6 +42,8 @@ export interface Task {
 
 export interface TodayResp {
   items: StudyItem[];
+  /** 今天过过的全部词（含已出列的），供「重新学习」回炉 */
+  day_items: StudyItem[];
   tasks: Task[];
   stats: {
     learned_today: number;

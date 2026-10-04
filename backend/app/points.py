@@ -65,13 +65,12 @@ def touch_streak(db: Session, user: User) -> None:
 
 
 TASK_DEFS = [
-    {"key": "words", "name": "复习 20 个单词", "pts": 15, "goal": 20},
     {"key": "spell", "name": "完成一次拼写练习", "pts": 20, "goal": 1},
     {"key": "speak", "name": "跟读 3 个句子", "pts": 10, "goal": 3},
 ]
 
 
-_TASK_COL = {"words": "words_reviewed", "spell": "spell_done", "speak": "speak_done"}
+_TASK_COL = {"spell": "spell_done", "speak": "speak_done"}
 
 
 def task_states(stat: DailyStat) -> list[dict]:

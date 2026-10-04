@@ -26,6 +26,7 @@ class AnswerIn(BaseModel):
     word_id: int
     answer: str = ""
     score: int | None = None
+    hint_used: bool = False  # 用过提示（如听音辨词刮开刮刮乐）：答对只加 1 分
 
 
 class ImportIn(BaseModel):

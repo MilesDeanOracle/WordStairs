@@ -103,14 +103,16 @@ def answer(body: AnswerIn, user: User = Depends(get_current_user), db: Session =
         correct = body.answer.strip() == word.meaning
         correct_answer = word.meaning
         if correct:
-            gain = add_points(db, user, 2, f"听力 · {word.text}", stat)
+            # 刮开提示后答对的只加 1 分，裸答加 2 分
+            gain = add_points(db, user, 1 if body.hint_used else 2, f"听力 · {word.text}", stat)
 
     elif body.mode == "spell":
         correct = body.answer.strip().lower() == word.text.lower()
         correct_answer = word.text
-        stat.spell_done += 1
-        task_gain += check_task(db, user, stat, "spell")
+        # 任务（及其奖励分）只在答对时计数
         if correct:
+            stat.spell_done += 1
+            task_gain += check_task(db, user, stat, "spell")
             gain = add_points(db, user, 2, f"拼写 · {word.text}", stat)
 
     elif body.mode == "scramble":

@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { ListenItem, UserActionResp } from "../api/types";
+import ScratchCard from "./ScratchCard";
 import { useAuth } from "../store/auth";
 import { floatPts, toast } from "../store/ui";
 import { speak } from "../utils/speech";
@@ -28,6 +29,7 @@ export default function Listen() {
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [fb, setFb] = useState<{ ok: boolean; pts: number; answer: string } | null>(null);
+  const [scratched, setScratched] = useState(false); // 刮开过提示：答对只加 1 分
 
   const { data, refetch } = useQuery<{ items: ListenItem[] }>({
     queryKey: ["practice", "listen"],
@@ -52,7 +54,7 @@ export default function Listen() {
     try {
       const res = await api<UserActionResp>("/practice/answer", {
         method: "POST",
-        body: { mode: "listen", word_id: item.word_id, answer: opt },
+        body: { mode: "listen", word_id: item.word_id, answer: opt, hint_used: scratched },
       });
       setUser(res.user);
       floatPts(res.points_added, e?.currentTarget);
@@ -82,11 +84,13 @@ export default function Listen() {
       setIdx(0);
       setPicked(null);
       setFb(null);
+      setScratched(false);
       refetch();
     } else {
       setIdx(idx + 1);
       setPicked(null);
       setFb(null);
+      setScratched(false);
     }
   };
 
@@ -110,6 +114,14 @@ export default function Listen() {
           </svg>
         </button>
         <span className="listen-cap">可以反复听 · 键盘 1–4 快速作答</span>
+        <ScratchCard
+          key={item.word_id}
+          forceOpen={picked !== null}
+          onOpen={() => setScratched(true)}
+        >
+          <span className="scratch-tag">提示</span>
+          <span className="scratch-word">{item.text}</span>
+        </ScratchCard>
       </div>
       <div className="opts">
         {item.options.map((opt, i) => (

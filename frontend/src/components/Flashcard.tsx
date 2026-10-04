@@ -6,7 +6,8 @@ import { useAuth } from "../store/auth";
 import { floatPts, toast } from "../store/ui";
 import { speak } from "../utils/speech";
 
-const STROKE_PATHS = ["M4 5h16", "M8 5v14", "M8 11h12", "M17 11v8", "M5 19h17"];
+// 「正」字笔顺：横、竖、横、竖、横——主竖偏右通顶到底，中横从主竖向右，短竖在左半段
+const STROKE_PATHS = ["M4 5h16", "M13 5v14", "M13 11h7", "M6 11v8", "M3 19h18"];
 
 function Zheng({ strokes }: { strokes: number }) {
   return (
@@ -34,11 +35,13 @@ export default function Flashcard({
   index,
   total,
   onGraded,
+  onRestart,
 }: {
   item: StudyItem;
   index: number;
   total: number;
   onGraded: () => void;
+  onRestart?: () => void;
 }) {
   const [flipped, setFlipped] = useState(false);
   const qc = useQueryClient();
@@ -73,9 +76,20 @@ export default function Flashcard({
         <span className="fcard-count">
           {index + 1} / {total}
         </span>
+        {onRestart && (
+          <button
+            type="button"
+            className="mini-btn"
+            style={{ marginLeft: "auto" }}
+            title="从头再过一遍今天的队列"
+            onClick={onRestart}
+          >
+            重新学习
+          </button>
+        )}
         <button
           className="icon-btn"
-          style={{ marginLeft: "auto" }}
+          style={{ marginLeft: onRestart ? 0 : "auto" }}
           aria-label="朗读单词"
           title="朗读（美音）"
           onClick={() => speak(w.text)}
